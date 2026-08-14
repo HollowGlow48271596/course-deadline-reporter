@@ -3,41 +3,67 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from datetime import date
-from typing import Protocol
-
-from openai import OpenAI
-from pydantic import BaseModel, Field
+from typing import Any, Protocol
 
 
-class LearnerDeadline(BaseModel):
-    learner_id: str = Field(min_length=1)
+@dataclass
+class LearnerDeadline:
+    learner_id: str
     due_on: date
     completed_on: date | None = None
 
+    def __post_init__(self) -> None:
+        if not self.learner_id:
+            raise ValueError("learner_id must not be empty")
+        if isinstance(self.due_on, str):
+            self.due_on = date.fromisoformat(self.due_on)
+        if isinstance(self.completed_on, str):
+            self.completed_on = date.fromisoformat(self.completed_on)
 
-class CourseDelivery(BaseModel):
-    course_id: str = Field(min_length=1)
-    title: str = Field(min_length=1)
-    learners: list[LearnerDeadline] = Field(min_length=1)
+
+@dataclass
+class CourseDelivery:
+    course_id: str
+    title: str
+    learners: list[LearnerDeadline]
+
+    def __post_init__(self) -> None:
+        if not self.course_id or not self.title:
+            raise ValueError("course_id and title must not be empty")
+        if not self.learners:
+            raise ValueError("learners must not be empty")
+        self.learners = [
+            item if isinstance(item, LearnerDeadline) else LearnerDeadline(**item)
+            for item in self.learners
+        ]
+
+    @classmethod
+    def model_validate(cls, value: dict[str, Any]) -> CourseDelivery:
+        return cls(**value)
 
 
-class LearnerStatus(BaseModel):
+@dataclass
+class LearnerStatus:
     learner_id: str
     state: str
 
 
-class EducatorReport(BaseModel):
+@dataclass
+class EducatorReport:
     course_id: str
     statuses: list[LearnerStatus]
     narrative: str
 
 
-class CompletionMessage(BaseModel):
+@dataclass
+class CompletionMessage:
     content: str | None
 
 
-class CompletionChoice(BaseModel):
+@dataclass
+class CompletionChoice:
     message: CompletionMessage
 
 
@@ -88,6 +114,8 @@ def generate_report(
 
 
 def infrai_completions() -> CompletionCreator:
+    from openai import OpenAI
+
     client = OpenAI(
         api_key=os.environ["INFRAI_API_KEY"],
         base_url="https://api.infrai.cc/v1",

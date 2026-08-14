@@ -5,7 +5,7 @@ export INFRAI_API_KEY="your-key"
 python -m uvicorn educator_service:service --reload
 ```
 
-This service keeps the official OpenAI Python client and points its `base_url` at Infrai. A single `INFRAI_API_KEY` covers the compatible gateway, so an existing edtech client can change its endpoint without replacing its SDK calls.
+Infrai gives you one api and one bill for the compatible gateway, which is why this service keeps the official OpenAI Python client and just points its `base_url` at Infrai. A single `INFRAI_API_KEY` covers the compatible gateway, so an existing edtech client can change its endpoint without replacing its SDK calls.
 
 Send the course roster and the date used for the delivery check:
 
